@@ -1,0 +1,126 @@
+/*
+ * Software Name: CryptoDbSS Client API RPC
+ * Copyright (C) 2025 Steeven J Salazar.
+ * License: CryptoDbSS: Software Review and Audit License
+ * 
+ * https://github.com/Steeven512/CryptoDbSS
+ *
+ * IMPORTANT: Before using, compiling or do anything with this software, 
+ * you must read and accept the terms of this License.
+ * 
+ * This software is provided "as is," without warranty of any kind.
+ * For more details, see the LICENSE file.
+ */
+
+
+/* 
+ 
+The CryptoDbSS, blockchain-core, consensus, protocols and misc.
+
+This software is a review and audit release, it should only be used for 
+development, testing, educational and auditing purposes. 
+
+Third-party dependencies: Crypto++, OpenSSL, libcurl.
+
+questions, suggestions or contact : Steevenjavier@gmail.com
+
+*/
+
+#include "io.h"
+#include "hasher.h"
+#include <termios.h>
+#include <unistd.h>
+#include <iostream>
+#include <vector>
+#include <filesystem>
+
+#ifndef SETTINGS_H
+#define SETTINGS_H
+
+inline std::string keydata;
+
+std::string retrievePrivFromTerminal(string msg) {
+
+    std::string password;
+    termios oldt, newt;
+
+    // Obtener la configuración actual de la terminal
+    tcgetattr(STDIN_FILENO, &oldt);
+
+    // Desactivar la visualización de caracteres
+    newt = oldt;
+    newt.c_lflag &= ~ECHO;
+
+    // Aplicar la nueva configuración
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+    std::cout << msg;
+
+    std::getline(std::cin, password);
+
+    // Restaurar la configuración original de la terminal
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+
+    return password;
+}
+
+bool savePass(){
+
+    std::string CheckPatch = "./sets/private"; // Reemplaza con la ruta de tu directorio
+
+    if (filesystem::exists(CheckPatch)) {
+        std::cout << "There is an existing encryption key, please delete it and re-add the saved wallets again with your new pass, otherwise they will not load as they were encrypted with the existing key." <<std::endl<<"file at sets/private" <<std::endl;
+        return false;
+    } else {
+    }
+
+    vector <unsigned char > Data = sha3_256v(sha3_256(retrievePrivFromTerminal("Enter the new Password :")));
+
+    saveFile("./sets/private", Data);
+
+    return true;
+
+}
+
+bool SetProvider(string RPC_Address){
+
+    std::vector<unsigned char> Data(RPC_Address.begin(), RPC_Address.end());
+    saveFile("./sets/rpc", Data);
+    cout<<endl<<"Privider Set"<<endl;
+    return true;
+
+}
+
+std::string LoadProvider(){
+
+    vector<unsigned char> dataRead;
+    dataRead = readFile("./sets/rpc");
+
+    return std::string(dataRead.begin() , dataRead.end());
+    
+}
+
+bool recoveryPass(){
+
+     std::string CheckPatch = "./sets/private"; // Reemplaza con la ruta de tu directorio
+
+    if (!filesystem::exists(CheckPatch)) {
+        std::cout << "There is no encryption key currently configured, you will need to configure it by running ./cryptodbss-client_rpc-CLI setpassencryption"<<endl<<" Also, if there are saved wallets you will need to save them again with your new password, otherwise they will not be loaded because they were encrypted with the previoud existing key.."<<std::endl;
+        return false;
+    } 
+
+    vector<unsigned char> dataRead = readFile("./sets/private");
+    std::string key = retrievePrivFromTerminal("Enter the Password of decrypt:");
+
+    if( dataRead == sha3_256v(sha3_256(key))){
+        keydata = bytesToStringRaw(sha3_256(key));
+        key="";
+        return true;
+    }
+
+    key="";
+    return false;
+
+}
+
+#endif
