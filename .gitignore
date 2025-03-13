@@ -1,4 +1,6 @@
-/cdbss-clientapirpc-cli
-/gitignore
+cdbss-clientapirpc-cli
+.gitignore
 /KeyStore/.gitkeep
 /sets/.gitkeep
+/sets/private
+/sets/rpc
