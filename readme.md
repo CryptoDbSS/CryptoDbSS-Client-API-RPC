@@ -88,8 +88,6 @@ this tool can handle:
 
     ---
 
-    ---
-
 # Get more Info And Updates
 
   </br>
